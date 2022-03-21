@@ -1,16 +1,33 @@
 FROM ruby:2.6.7-buster
 
-# docker-ce-cli apt dependencies
 ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update
 
-# TODO: Add python stuff
+# Install python
+RUN apt-get install -y python3 python3-pip
 
-# The working location in the container is:
-WORKDIR /app
+# Install pip and setuptools
+RUN apt-get update && apt-get install -y python3-setuptools
 
-# We need bundler to get our gems...
+# Get speaker-verification repo
+RUN git clone -b fix/logger-issues https://github.com/OnTrack-UG-Squad/speaker-verification.git
+
+WORKDIR /speaker-verification
+
+RUN export PYTHONPATH=${PYTHONPATH}:/speaker-verification
+
+# RUN python3 setup.py install
+
+# RUN pip3 install -r ./speaker-verification/requirements.txt
+
+# Install bundler
 RUN gem install bundler
 
-# Now get the Gemfile and its lock... then install these gems
-COPY Gemfile Gemfile.lock ./
+# Setup working dir and copy in doubtfire speaker verification code
+WORKDIR /app
+COPY . /app/
+
+# Install gems
 RUN bundle install
+
+CMD ruby app.rb
